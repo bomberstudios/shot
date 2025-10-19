@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Shot!",
+  "version": "1.0.1",
+  "description": "The simplest way to resize browser windows and capture screenshots.",
+  "homepage_url": "https://ale.today/shot",
+  "permissions": [
+    "activeTab",
+    "downloads",
+    "storage"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-s.png",
+      "48": "icons/icon-m.png",
+      "128": "icons/icon-l.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-s.png",
+    "48": "icons/icon-m.png",
+    "128": "icons/icon-l.png"
+  }
+}

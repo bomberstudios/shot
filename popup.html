@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Shot!</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+
+  <body>
+    <h1>Shot!</h1>
+
+    <section>
+      <h2>Resize</h2>
+      <div class="controls">
+        <select id="preset">
+          <option value="800x600">800×600</option>
+          <option value="1024x768">1024×768</option>
+          <option value="1366x768">1366×768</option>
+          <option value="1440x900">1440×900</option>
+          <option value="1920x1080">1920×1080</option>
+        </select>
+        <button id="resize">Resize</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Capture</h2>
+      <div class="controls">
+        <button id="capture-visible">Visible</button>
+        <button id="capture-fullpage" disabled>Full Page (Soon)</button>
+      </div>
+    </section>
+
+    <div id="status" aria-live="polite">Shot! v1.0 ready for action</div>
+
+    <script src="popup.js"></script>
+  </body>
+
+</html>
