@@ -1,5 +1,5 @@
 const $ = s => document.querySelector(s);
-const browser = (typeof chrome !== 'undefined') ? chrome : (typeof browser !== 'undefined' ? browser : undefined);
+const browser = chrome || browser; // for compatibility
 
 function setStatus(msg) {
   const s = $('#status');
@@ -10,35 +10,10 @@ function makeStamp() {
   return new Date().toISOString().replace(/[:.]/g, '-');
 }
 
-// Helper: convert data: URL to object URL (works around Firefox rejecting data: URLs in downloads)
-async function ensureDownloadableUrl(url) {
-  if (!url || !url.startsWith || !url.startsWith('data:')) return url;
-  // Use fetch to get a blob from the data URL, then create an object URL
-  const resp = await fetch(url);
-  const blob = await resp.blob();
-  const objectUrl = URL.createObjectURL(blob);
-  return objectUrl;
-}
-
-// Helper: download a URL, converting data: URLs when needed and revoking object URLs afterwards
-async function safeDownload(url, filename) {
-  let objectUrl;
-  try {
-    if (url.startsWith('data:')) {
-      objectUrl = await ensureDownloadableUrl(url);
-      await browser.downloads.download({ url: objectUrl, filename });
-    } else {
-      await browser.downloads.download({ url, filename });
-    }
-  } finally {
-    if (objectUrl) {
-      // Revoke after a small delay to allow the download to start
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
-    }
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
+  // Set version
+  setStatus(`Shot! v1.1.0 ready to rock.`);
+
   // Resize handler
   const resizeBtn = $('#resize');
   if (resizeBtn) resizeBtn.addEventListener('click', async () => {
@@ -51,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setStatus(`Window resized to ${w}×${h}`);
   });
 
-  // Store default window size for next time. Doesn't seem to work in Firefox yet.
+  // Store default window size for next time
   const presetEl = $('#preset');
   if (presetEl) {
     // load saved size
@@ -72,26 +47,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // Capture buttons
   const captureVisibleBtn = $('#capture-visible');
   if (captureVisibleBtn) captureVisibleBtn.addEventListener('click', async () => {
-    const filename = `shot-${makeStamp()}.png`;
+    const filename = `@shots/shot-${makeStamp()}.png`;
     const opts = { format: 'png' };
-    // TODO: this does not work well in Firefox (it captures an image larger than the visible area, based on the browser window size, not the visible tab area)
     const image = await browser.tabs.captureVisibleTab(null, opts);
-    await safeDownload(image, filename);
+    browser.downloads.download({ url: image, filename });
   });
-
-  const captureFullpageBtn = $('#capture-fullpage');
-  if (captureFullpageBtn && browser.tabs.captureTab !== undefined) {
-    captureFullpageBtn.addEventListener('click', async () => {
-      const filename = `shot-fullpage-${makeStamp()}.png`;
-      const image = await browser.tabs.captureTab(null, { format: 'png' });
-      await safeDownload(image, filename);
-    });
-  } else {
-    // Disable full page button if API not available
-    if (captureFullpageBtn) {
-      captureFullpageBtn.disabled = true;
-      captureFullpageBtn.title = 'Full page capture not supported in this browser';
-    }
-  }
+  const captureFullBtn = $('#capture-full');
+  if (captureFullBtn) captureFullBtn.addEventListener('click', async () => {
+    const filename = `@shots/shot-${makeStamp()}.png`;
+    const opts = { format: 'png' };
+    const image = await browser.tabs.captureTab(null, opts);
+    browser.downloads.download({ url: image, filename });
+  });
 
 });

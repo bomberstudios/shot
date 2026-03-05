@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "test": "bun test",
+    "test:watch": "bun test --watch"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.8.3"
+  }
+}

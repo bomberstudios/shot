@@ -20,3 +20,5 @@ If your use case is different, this may not be your best option.
 - [ ] Full page capture (once Chrome supports [captureTab](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/captureTab), probably…)
 - [ ] One-click resizing, using buttons instead of a `<select>`
 - [ ] Custom presets for sizes
+- [ ] List recent captures at the bottom? I use the Downloads list to do that, and drag items from there to Figma
+- [ ] Copy captures to clipboard (either automatically, or by clicking a button in the capture list)
