@@ -19,6 +19,6 @@ If your use case is different, this may not be your best option.
 - [ ] The ability to save a screenshot with only one click on the extension icon
 - [ ] Full page capture (once Chrome supports [captureTab](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/captureTab), probably…)
 - [ ] One-click resizing, using buttons instead of a `<select>`
-- [ ] Custom presets for sizes
+- [x] Custom presets for sizes
 - [ ] List recent captures at the bottom? I use the Downloads list to do that, and drag items from there to Figma
-- [ ] Copy captures to clipboard (either automatically, or by clicking a button in the capture list)
+- [x] Copy captures to clipboard (either automatically, or by clicking a button in the capture list)
