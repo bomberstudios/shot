@@ -38,12 +38,37 @@ select {
 .controls {
   width: 100%;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 1em;
+  gap: 0.5em;
 
   button {
     flex-grow: 1;
   }
+}
+
+#custom-size {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 0.5em;
+}
+
+#custom-size[hidden] {
+  display: none;
+}
+
+#custom-w,
+#custom-h {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.5em;
+  border: 1px solid #ccc;
+  border-radius: 0.5em;
+  font-size: inherit;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 button {

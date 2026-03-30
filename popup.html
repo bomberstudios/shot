@@ -22,7 +22,13 @@
           <option value="1440x900">1440×900</option>
           <option value="1920x1080">1920×1080</option>
           <option value="2560x1440">2560×1440</option>
+          <option value="custom">Custom…</option>
         </select>
+        <div id="custom-size" hidden>
+          <input type="number" id="custom-w" min="1" placeholder="W" />
+          <span>×</span>
+          <input type="number" id="custom-h" min="1" placeholder="H" />
+        </div>
         <button id="resize">Resize</button>
       </div>
     </section>

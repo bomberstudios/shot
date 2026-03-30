@@ -5,15 +5,20 @@ import popupSource from './popup.js' with { type: 'text' };
 // Minimal DOM mock — only the subset popup.js needs
 function makeElement() {
   const el = {
-    textContent: '',
-    value: '',
+    textContent: "",
+    value: "",
     disabled: false,
+    hidden: false,
     _listeners: {},
     addEventListener(event, handler) {
       (this._listeners[event] ??= []).push(handler);
     },
-    click() { this._dispatch({ type: 'click' }); },
-    dispatchEvent(evt) { this._dispatch(evt); },
+    click() {
+      this._dispatch({ type: "click" });
+    },
+    dispatchEvent(evt) {
+      this._dispatch(evt);
+    },
     _dispatch(evt) {
       for (const h of this._listeners[evt.type] ?? []) h(evt);
     },
@@ -22,12 +27,27 @@ function makeElement() {
 }
 
 function makeDocument() {
+  const presetEl = makeElement();
+  presetEl.options = [
+    { value: "800x600" },
+    { value: "1024x768" },
+    { value: "1280x800" },
+    { value: "1366x768" },
+    { value: "1440x900" },
+    { value: "1920x1080" },
+    { value: "2560x1440" },
+    { value: "custom" },
+  ];
+
   const els = {
-    preset: makeElement(),
+    preset: presetEl,
     resize: makeElement(),
-    'capture-visible': makeElement(),
-    'capture-full': makeElement(),
+    "capture-visible": makeElement(),
+    "capture-full": makeElement(),
     status: makeElement(),
+    "custom-size": makeElement(),
+    "custom-w": makeElement(),
+    "custom-h": makeElement(),
   };
   const docListeners = {};
 
@@ -75,7 +95,27 @@ function makeBrowserMock({ windowWidth = 1280, windowHeight = 800 } = {}) {
 async function createPopup(browserMock) {
   const doc = makeDocument();
 
-  const ctx = vm.createContext({ document: doc, chrome: browserMock, console });
+  const clipboardWrite = mock(async () => {});
+  browserMock._clipboardWrite = clipboardWrite;
+  const ctx = vm.createContext({
+    document: doc,
+    chrome: browserMock,
+    console,
+    navigator: { clipboard: { write: clipboardWrite } },
+    ClipboardItem: class ClipboardItem {
+      constructor(data) {
+        this.data = data;
+      }
+    },
+    Blob: class Blob {
+      constructor(parts, opts = {}) {
+        this.parts = parts;
+        this.type = opts.type || "";
+      }
+    },
+    fetch: undefined,
+    atob: (s) => Buffer.from(s, "base64").toString("binary"),
+  });
   vm.runInContext(popupSource, ctx);
 
   // Trigger DOMContentLoaded
@@ -175,6 +215,19 @@ describe('capture-visible button', () => {
       filename: expect.stringMatching(/^@shots\/shot-.+\.png$/),
     });
   });
+
+  test("copies visible screenshot to clipboard", async () => {
+    const b = makeBrowserMock();
+    const { doc } = await createPopup(b);
+
+    doc.querySelector("#capture-visible").click();
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(b._clipboardWrite).toHaveBeenCalled();
+    expect(doc.querySelector("#status").textContent).toMatch(
+      /copied to clipboard/i,
+    );
+  });
 });
 
 // -- preset change --
@@ -191,5 +244,87 @@ describe('preset change', () => {
     preset.dispatchEvent(evt);
 
     expect(b.storage.sync.set).toHaveBeenCalledWith({ windowWidth: 1920, windowHeight: 1080 });
+  });
+});
+
+// -- custom size --
+
+describe('custom size', () => {
+  test('selecting "custom" reveals #custom-size', async () => {
+    const b = makeBrowserMock({ windowWidth: 1280, windowHeight: 800 });
+    const { doc } = await createPopup(b);
+
+    const preset = doc.querySelector('#preset');
+    preset.value = 'custom';
+    const evt = doc.createEvent();
+    evt.initEvent('change');
+    preset.dispatchEvent(evt);
+
+    expect(doc.querySelector('#custom-size').hidden).toBe(false);
+  });
+
+  test('selecting a non-custom preset hides #custom-size', async () => {
+    const b = makeBrowserMock({ windowWidth: 1280, windowHeight: 800 });
+    const { doc } = await createPopup(b);
+
+    const preset = doc.querySelector('#preset');
+
+    preset.value = 'custom';
+    let evt = doc.createEvent();
+    evt.initEvent('change');
+    preset.dispatchEvent(evt);
+
+    preset.value = '1920x1080';
+    evt = doc.createEvent();
+    evt.initEvent('change');
+    preset.dispatchEvent(evt);
+
+    expect(doc.querySelector('#custom-size').hidden).toBe(true);
+  });
+
+  test('resize with custom selected uses #custom-w and #custom-h values', async () => {
+    const b = makeBrowserMock({ windowWidth: 1280, windowHeight: 800 });
+    const { doc } = await createPopup(b);
+
+    doc.querySelector('#preset').value = 'custom';
+    doc.querySelector('#custom-w').value = '1234';
+    doc.querySelector('#custom-h').value = '567';
+
+    doc.querySelector('#resize').click();
+    await new Promise(r => setTimeout(r, 20));
+
+    expect(b.windows.update).toHaveBeenCalledWith(42, { width: 1234, height: 567 });
+  });
+
+  test('changing custom inputs saves dimensions to storage', async () => {
+    const b = makeBrowserMock({ windowWidth: 1280, windowHeight: 800 });
+    const { doc } = await createPopup(b);
+
+    doc.querySelector('#custom-w').value = '999';
+    doc.querySelector('#custom-h').value = '777';
+
+    const evt = doc.createEvent();
+    evt.initEvent('input');
+    doc.querySelector('#custom-w').dispatchEvent(evt);
+
+    expect(b.storage.sync.set).toHaveBeenCalledWith({ windowWidth: 999, windowHeight: 777 });
+  });
+
+  test('on load with non-preset dims, selects "custom" and fills inputs', async () => {
+    const b = makeBrowserMock({ windowWidth: 1234, windowHeight: 567 });
+    const { doc } = await createPopup(b);
+
+    expect(doc.querySelector('#preset').value).toBe('custom');
+    expect(doc.querySelector('#custom-w').value).toBe(1234);
+    expect(doc.querySelector('#custom-h').value).toBe(567);
+    expect(doc.querySelector('#custom-size').hidden).toBe(false);
+  });
+
+  test('on load with preset dims, #custom-size stays hidden', async () => {
+    const b = makeBrowserMock({ windowWidth: 1280, windowHeight: 800 });
+    const { doc } = await createPopup(b);
+
+    expect(doc.querySelector('#preset').value).toBe('1280x800');
+    expect(doc.querySelector('#custom-size').hidden).toBe(true);
   });
 });
