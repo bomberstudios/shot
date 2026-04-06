@@ -1,5 +1,6 @@
 const $ = s => document.querySelector(s);
 const browser = chrome || browser; // for compatibility
+const manifest = chrome.runtime.getManifest();
 
 function setStatus(msg) {
   const s = $('#status');
@@ -18,7 +19,7 @@ function isPreset(value) {
 
 document.addEventListener('DOMContentLoaded', () => {
   // Set version
-  setStatus(`Shot! v1.1.0 ready to rock.`);
+  setStatus(`${manifest.name} v${manifest.version} ready to rock.`);
 
   function updateCustomVisibility() {
     $("#custom-size").hidden = $("#preset").value !== "custom";
