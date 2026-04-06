@@ -1,0 +1,4 @@
+popup.test.js export-ignore
+.gitignore export-ignore
+.gitattributes export-ignore
+package.json export-ignore

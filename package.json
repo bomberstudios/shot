@@ -1,7 +1,8 @@
 {
   "scripts": {
     "test": "bun test",
-    "test:watch": "bun test --watch"
+    "test:watch": "bun test --watch",
+    "build": "git archive --format=zip -o ./shot-$(git rev-parse --short HEAD).zip HEAD"
   },
   "devDependencies": {
     "happy-dom": "^20.8.3"
